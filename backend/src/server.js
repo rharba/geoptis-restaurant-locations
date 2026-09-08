@@ -3,7 +3,8 @@ const cors = require('cors');
 const restaurantRoutes = require('./routes/restaurantRoutes');
 
 const app = express();
-const PORT = 3000;
+
+const PORT = process.env.PORT || 3000;
 
 // Allow requests from the Vue frontend
 app.use(cors());
@@ -22,6 +23,6 @@ app.get('/', (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
