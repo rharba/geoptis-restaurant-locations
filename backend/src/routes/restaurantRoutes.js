@@ -1,11 +1,18 @@
 const express = require('express');
 const pool = require('../db/database');
-const { createRestaurant } = require('../controllers/restaurantController');
+
+const {
+  createRestaurant,
+  updateRestaurant,
+} = require('../controllers/restaurantController');
 
 const router = express.Router();
 
 // POST - Create a restaurant
 router.post('/', createRestaurant);
+
+// PUT - Update a restaurant
+router.put('/:id', updateRestaurant);
 
 // GET - Get all restaurants
 router.get('/', async (req, res) => {
