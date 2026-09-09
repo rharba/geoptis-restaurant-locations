@@ -38,6 +38,21 @@ const defaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = defaultIcon
 
+// =========================
+// GOOGLE MAPS DIRECTIONS
+// =========================
+
+const getGoogleMapsUrl = (restaurant) => {
+  const latitude = Number(restaurant.latitude)
+  const longitude = Number(restaurant.longitude)
+
+  return `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`
+}
+
+// =========================
+// UPDATE MARKERS
+// =========================
+
 const updateMarkers = () => {
   if (!markersLayer) return
 
@@ -61,9 +76,27 @@ const updateMarkers = () => {
       longitude,
     ])
 
+    const googleMapsUrl =
+      getGoogleMapsUrl(restaurant)
+
     marker.bindPopup(`
       <strong>${restaurant.name}</strong><br>
-      ${restaurant.address}<br>
+
+      <a
+        href="${googleMapsUrl}"
+        target="_blank"
+        rel="noopener noreferrer"
+        style="
+          color: #6b421e;
+          text-decoration: none;
+          font-weight: 600;
+        "
+      >
+        ${restaurant.address} ↗
+      </a>
+
+      <br>
+
       ${restaurant.cuisine_type}
     `)
 
@@ -82,6 +115,10 @@ const updateMarkers = () => {
     })
   }
 }
+
+// =========================
+// INITIALIZE MAP
+// =========================
 
 onMounted(() => {
   map = L.map(mapContainer.value).setView(
@@ -102,13 +139,23 @@ onMounted(() => {
   updateMarkers()
 })
 
+// =========================
+// WATCH RESTAURANTS
+// =========================
+
 watch(
   () => props.restaurants,
   () => {
     updateMarkers()
   },
-  { deep: true }
+  {
+    deep: true,
+  }
 )
+
+// =========================
+// CLEANUP
+// =========================
 
 onBeforeUnmount(() => {
   if (map) {
@@ -119,12 +166,16 @@ onBeforeUnmount(() => {
 
 <template>
   <section class="map-section">
-    <h2>Carte des restaurants</h2>
+
+    <h2>
+      Carte des restaurants
+    </h2>
 
     <div
       ref="mapContainer"
       class="restaurant-map"
     ></div>
+
   </section>
 </template>
 

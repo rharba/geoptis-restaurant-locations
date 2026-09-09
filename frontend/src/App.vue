@@ -11,7 +11,6 @@ import RestaurantDistance from './components/RestaurantDistance.vue'
 // =========================
 
 const restaurants = ref([])
-
 const searchQuery = ref('')
 const selectedCuisine = ref('')
 
@@ -33,7 +32,6 @@ const error = ref('')
 
 const userLatitude = ref(null)
 const userLongitude = ref(null)
-
 const locationError = ref('')
 
 const getUserLocation = () => {
@@ -48,19 +46,26 @@ const getUserLocation = () => {
     (position) => {
       userLatitude.value = position.coords.latitude
       userLongitude.value = position.coords.longitude
-
       locationError.value = ''
     },
     (error) => {
-      console.error(
-        'Geolocation error:',
-        error
-      )
+      console.error('Geolocation error:', error)
 
       locationError.value =
         'Impossible d’obtenir votre position. Les distances ne seront pas affichées.'
     }
   )
+}
+
+// =========================
+// GOOGLE MAPS DIRECTIONS
+// =========================
+
+const getGoogleMapsUrl = (restaurant) => {
+  const latitude = Number(restaurant.latitude)
+  const longitude = Number(restaurant.longitude)
+
+  return `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`
 }
 
 // =========================
@@ -300,7 +305,6 @@ onMounted(() => {
       <h1>Restaurants</h1>
 
       <div class="header-subtitle">
-
         <span>
           Gestion des restaurants
         </span>
@@ -308,7 +312,6 @@ onMounted(() => {
         <span>
           et de leurs coordonnées géographiques
         </span>
-
       </div>
 
       <div class="header-tagline">
@@ -350,7 +353,6 @@ onMounted(() => {
         <select
           v-model="selectedCuisine"
         >
-
           <option value="">
             Toutes les cuisines
           </option>
@@ -424,19 +426,40 @@ onMounted(() => {
               {{ restaurant.name }}
             </h2>
 
-            <p>
-              {{ restaurant.address }}
+            <!-- GOOGLE MAPS DIRECTIONS -->
+
+            <p class="restaurant-address">
+              📍
+
+              <a
+                :href="getGoogleMapsUrl(restaurant)"
+                target="_blank"
+                rel="noopener noreferrer"
+                :aria-label="`Obtenir l'itinéraire vers ${restaurant.name}`"
+              >
+                {{ restaurant.address }}
+              </a>
+
+              <span class="maps-link-icon">
+                ↗
+              </span>
             </p>
+
+            <!-- CUISINE -->
 
             <span class="cuisine">
               🍽️ {{ restaurant.cuisine_type }}
             </span>
+
+            <!-- COORDINATES -->
 
             <p class="coordinates">
               📍
               {{ Number(restaurant.latitude).toFixed(8) }},
               {{ Number(restaurant.longitude).toFixed(8) }}
             </p>
+
+            <!-- PHONE -->
 
             <p
               v-if="restaurant.phone_number"

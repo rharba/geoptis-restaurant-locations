@@ -296,6 +296,37 @@ select {
   line-height: 1.55;
 }
 
+/* =========================
+   GOOGLE MAPS ADDRESS
+   ========================= */
+
+.restaurant-address {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.restaurant-address a {
+  color: #6b421e;
+  text-decoration: none;
+  font-weight: 600;
+  transition:
+    color 0.2s ease,
+    text-decoration 0.2s ease;
+}
+
+.restaurant-address a:hover {
+  color: #a86619;
+  text-decoration: underline;
+}
+
+.maps-link-icon {
+  color: #6b421e;
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
 .cuisine {
   display: inline-block;
   margin: 7px 0;
@@ -492,6 +523,14 @@ select {
   .restaurant-card {
     padding: 22px;
     box-shadow: 4px 4px 0 #6b421e;
+  }
+
+  .restaurant-address {
+    align-items: flex-start;
+  }
+
+  .restaurant-address a {
+    word-break: break-word;
   }
 
   .edit-actions {
