@@ -1,9 +1,17 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import api from './api'
+
 import RestaurantForm from './components/RestaurantForm.vue'
+import RestaurantMap from './components/RestaurantMap.vue'
+import RestaurantDistance from './components/RestaurantDistance.vue'
+
+// =========================
+// RESTAURANTS
+// =========================
 
 const restaurants = ref([])
+
 const searchQuery = ref('')
 const selectedCuisine = ref('')
 
@@ -18,6 +26,42 @@ const cuisines = [
 
 const loading = ref(false)
 const error = ref('')
+
+// =========================
+// USER LOCATION
+// =========================
+
+const userLatitude = ref(null)
+const userLongitude = ref(null)
+
+const locationError = ref('')
+
+const getUserLocation = () => {
+  if (!navigator.geolocation) {
+    locationError.value =
+      'La géolocalisation n’est pas disponible sur cet appareil.'
+
+    return
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      userLatitude.value = position.coords.latitude
+      userLongitude.value = position.coords.longitude
+
+      locationError.value = ''
+    },
+    (error) => {
+      console.error(
+        'Geolocation error:',
+        error
+      )
+
+      locationError.value =
+        'Impossible d’obtenir votre position. Les distances ne seront pas affichées.'
+    }
+  )
+}
 
 // =========================
 // EDIT RESTAURANT
@@ -63,12 +107,14 @@ const saveRestaurant = async () => {
   if (editName.value.trim().length < 3) {
     editError.value =
       'Le nom doit contenir au moins 3 caractères.'
+
     return
   }
 
   if (editAddress.value.trim().length < 10) {
     editError.value =
       "L'adresse doit contenir au moins 10 caractères."
+
     return
   }
 
@@ -80,6 +126,7 @@ const saveRestaurant = async () => {
   ) {
     editError.value =
       'La latitude doit être comprise entre -90 et 90.'
+
     return
   }
 
@@ -91,12 +138,14 @@ const saveRestaurant = async () => {
   ) {
     editError.value =
       'La longitude doit être comprise entre -180 et 180.'
+
     return
   }
 
   if (editCuisine.value === '') {
     editError.value =
       'Veuillez sélectionner une cuisine.'
+
     return
   }
 
@@ -109,6 +158,7 @@ const saveRestaurant = async () => {
   ) {
     editError.value =
       'Le numéro de téléphone n’est pas valide.'
+
     return
   }
 
@@ -132,11 +182,9 @@ const saveRestaurant = async () => {
       }
     )
 
-    // Close edit mode
     editingId.value = null
     editError.value = ''
 
-    // Reload restaurant list
     await fetchRestaurants()
   } catch (err) {
     console.error(
@@ -232,6 +280,7 @@ watch(
 
 onMounted(() => {
   fetchRestaurants()
+  getUserLocation()
 })
 </script>
 
@@ -251,6 +300,7 @@ onMounted(() => {
       <h1>Restaurants</h1>
 
       <div class="header-subtitle">
+
         <span>
           Gestion des restaurants
         </span>
@@ -258,6 +308,7 @@ onMounted(() => {
         <span>
           et de leurs coordonnées géographiques
         </span>
+
       </div>
 
       <div class="header-tagline">
@@ -277,6 +328,14 @@ onMounted(() => {
       />
 
       <!-- =========================
+           MAP
+           ========================= -->
+
+      <RestaurantMap
+        :restaurants="restaurants"
+      />
+
+      <!-- =========================
            SEARCH & FILTERS
            ========================= -->
 
@@ -291,6 +350,7 @@ onMounted(() => {
         <select
           v-model="selectedCuisine"
         >
+
           <option value="">
             Toutes les cuisines
           </option>
@@ -302,9 +362,21 @@ onMounted(() => {
           >
             {{ cuisine }}
           </option>
+
         </select>
 
       </section>
+
+      <!-- =========================
+           LOCATION MESSAGE
+           ========================= -->
+
+      <p
+        v-if="locationError"
+        class="location-message"
+      >
+        {{ locationError }}
+      </p>
 
       <!-- =========================
            LOADING
@@ -372,6 +444,18 @@ onMounted(() => {
               📞
               {{ restaurant.phone_number }}
             </p>
+
+            <!-- DISTANCE -->
+
+            <RestaurantDistance
+              v-if="
+                userLatitude !== null &&
+                userLongitude !== null
+              "
+              :restaurant="restaurant"
+              :userLatitude="userLatitude"
+              :userLongitude="userLongitude"
+            />
 
             <!-- EDIT BUTTON -->
 
