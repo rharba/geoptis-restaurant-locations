@@ -314,6 +314,103 @@ select {
 }
 
 /* =========================
+   EDIT RESTAURANT
+   ========================= */
+
+.edit-button {
+  margin-top: 14px;
+  padding: 9px 16px;
+  border: 2px solid #3a210f;
+  border-radius: 8px;
+  background: #ffd12f;
+  color: #2f1b0c;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    background 0.2s,
+    box-shadow 0.2s;
+}
+
+.edit-button:hover {
+  background: #f3bc19;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 0 #6b421e;
+}
+
+.edit-button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.edit-form {
+  width: 100%;
+}
+
+.edit-form h2 {
+  margin-bottom: 22px;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.save-button,
+.cancel-button {
+  flex: 1;
+  padding: 11px 16px;
+  border-radius: 8px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    background 0.2s,
+    box-shadow 0.2s;
+}
+
+.save-button {
+  border: 2px solid #3a210f;
+  background: #ffd12f;
+  color: #2f1b0c;
+}
+
+.save-button:hover {
+  background: #f3bc19;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 0 #6b421e;
+}
+
+.save-button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.cancel-button {
+  border: 2px solid #9a7651;
+  background: #fffdf8;
+  color: #5a3212;
+}
+
+.cancel-button:hover {
+  background: #f1e8d8;
+  transform: translateY(-2px);
+}
+
+.cancel-button:active {
+  transform: translateY(0);
+}
+
+.save-button:disabled,
+.cancel-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* =========================
    GENERAL TEXT
    ========================= */
 
@@ -391,5 +488,14 @@ select {
   .restaurant-card {
     padding: 22px;
     box-shadow: 4px 4px 0 #6b421e;
+  }
+
+  .edit-actions {
+    flex-direction: column;
+  }
+
+  .save-button,
+  .cancel-button {
+    width: 100%;
   }
 }

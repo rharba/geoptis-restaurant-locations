@@ -19,6 +19,147 @@ const cuisines = [
 const loading = ref(false)
 const error = ref('')
 
+// =========================
+// EDIT RESTAURANT
+// =========================
+
+const editingId = ref(null)
+
+const editName = ref('')
+const editAddress = ref('')
+const editLatitude = ref('')
+const editLongitude = ref('')
+const editCuisine = ref('')
+const editPhone = ref('')
+
+const editLoading = ref(false)
+const editError = ref('')
+
+const startEditing = (restaurant) => {
+  editingId.value = restaurant.id
+
+  editName.value = restaurant.name
+  editAddress.value = restaurant.address
+  editLatitude.value = restaurant.latitude
+  editLongitude.value = restaurant.longitude
+  editCuisine.value = restaurant.cuisine_type
+  editPhone.value = restaurant.phone_number || ''
+
+  editError.value = ''
+}
+
+const cancelEditing = () => {
+  editingId.value = null
+  editError.value = ''
+}
+
+const saveRestaurant = async () => {
+  editError.value = ''
+
+  // =========================
+  // VALIDATION
+  // =========================
+
+  if (editName.value.trim().length < 3) {
+    editError.value =
+      'Le nom doit contenir au moins 3 caractères.'
+    return
+  }
+
+  if (editAddress.value.trim().length < 10) {
+    editError.value =
+      "L'adresse doit contenir au moins 10 caractères."
+    return
+  }
+
+  if (
+    editLatitude.value === '' ||
+    Number.isNaN(Number(editLatitude.value)) ||
+    Number(editLatitude.value) < -90 ||
+    Number(editLatitude.value) > 90
+  ) {
+    editError.value =
+      'La latitude doit être comprise entre -90 et 90.'
+    return
+  }
+
+  if (
+    editLongitude.value === '' ||
+    Number.isNaN(Number(editLongitude.value)) ||
+    Number(editLongitude.value) < -180 ||
+    Number(editLongitude.value) > 180
+  ) {
+    editError.value =
+      'La longitude doit être comprise entre -180 et 180.'
+    return
+  }
+
+  if (editCuisine.value === '') {
+    editError.value =
+      'Veuillez sélectionner une cuisine.'
+    return
+  }
+
+  // Phone is optional
+  if (
+    editPhone.value.trim() !== '' &&
+    !/^\+?[0-9\s().-]{8,20}$/.test(
+      editPhone.value.trim()
+    )
+  ) {
+    editError.value =
+      'Le numéro de téléphone n’est pas valide.'
+    return
+  }
+
+  // =========================
+  // UPDATE RESTAURANT
+  // =========================
+
+  editLoading.value = true
+
+  try {
+    await api.put(
+      `/restaurants/${editingId.value}`,
+      {
+        name: editName.value.trim(),
+        address: editAddress.value.trim(),
+        latitude: Number(editLatitude.value),
+        longitude: Number(editLongitude.value),
+        cuisine_type: editCuisine.value,
+        phone_number:
+          editPhone.value.trim() || null,
+      }
+    )
+
+    // Close edit mode
+    editingId.value = null
+    editError.value = ''
+
+    // Reload restaurant list
+    await fetchRestaurants()
+  } catch (err) {
+    console.error(
+      'Error updating restaurant:',
+      err
+    )
+
+    if (err.response?.data?.error) {
+      editError.value =
+        err.response.data.error
+    } else {
+      editError.value =
+        'Impossible de modifier le restaurant.'
+    }
+  } finally {
+    editLoading.value = false
+  }
+}
+
+// =========================
+// FETCH RESTAURANTS
+// =========================
+
 const fetchRestaurants = async () => {
   loading.value = true
   error.value = ''
@@ -28,44 +169,67 @@ const fetchRestaurants = async () => {
 
     // Search by name or address
     if (searchQuery.value.trim() !== '') {
-      response = await api.get('/restaurants/search', {
-        params: {
-          q: searchQuery.value.trim(),
-        },
-      })
+      response = await api.get(
+        '/restaurants/search',
+        {
+          params: {
+            q: searchQuery.value.trim(),
+          },
+        }
+      )
     }
 
     // Filter by cuisine
     else if (selectedCuisine.value !== '') {
-      response = await api.get('/restaurants/filter', {
-        params: {
-          cuisine: selectedCuisine.value,
-        },
-      })
+      response = await api.get(
+        '/restaurants/filter',
+        {
+          params: {
+            cuisine:
+              selectedCuisine.value,
+          },
+        }
+      )
     }
 
     // Get all restaurants
     else {
-      response = await api.get('/restaurants')
+      response = await api.get(
+        '/restaurants'
+      )
     }
 
     restaurants.value = response.data
   } catch (err) {
-    console.error('Error loading restaurants:', err)
+    console.error(
+      'Error loading restaurants:',
+      err
+    )
 
-    error.value = 'Impossible de charger les restaurants.'
+    error.value =
+      'Impossible de charger les restaurants.'
+
     restaurants.value = []
   } finally {
     loading.value = false
   }
 }
 
-// Watch search and cuisine filters
-watch([searchQuery, selectedCuisine], () => {
-  fetchRestaurants()
-})
+// =========================
+// WATCH SEARCH & FILTERS
+// =========================
 
-// Load restaurants when the page opens
+watch(
+  [searchQuery, selectedCuisine],
+  () => {
+    fetchRestaurants()
+  }
+)
+
+// =========================
+// INITIAL LOAD
+// =========================
+
 onMounted(() => {
   fetchRestaurants()
 })
@@ -74,7 +238,10 @@ onMounted(() => {
 <template>
   <div class="app">
 
-    <!-- Header -->
+    <!-- =========================
+         HEADER
+         ========================= -->
+
     <header class="header">
 
       <div class="header-decoration">
@@ -84,8 +251,13 @@ onMounted(() => {
       <h1>Restaurants</h1>
 
       <div class="header-subtitle">
-        <span>Gestion des restaurants</span>
-        <span>et de leurs coordonnées géographiques</span>
+        <span>
+          Gestion des restaurants
+        </span>
+
+        <span>
+          et de leurs coordonnées géographiques
+        </span>
       </div>
 
       <div class="header-tagline">
@@ -96,10 +268,18 @@ onMounted(() => {
 
     <main class="main">
 
-      <!-- Add restaurant form -->
-      <RestaurantForm @restaurant-created="fetchRestaurants" />
+      <!-- =========================
+           ADD RESTAURANT
+           ========================= -->
 
-      <!-- Search and filters -->
+      <RestaurantForm
+        @restaurant-created="fetchRestaurants"
+      />
+
+      <!-- =========================
+           SEARCH & FILTERS
+           ========================= -->
+
       <section class="filters">
 
         <input
@@ -108,7 +288,9 @@ onMounted(() => {
           placeholder="Rechercher par nom ou adresse..."
         />
 
-        <select v-model="selectedCuisine">
+        <select
+          v-model="selectedCuisine"
+        >
           <option value="">
             Toutes les cuisines
           </option>
@@ -124,17 +306,29 @@ onMounted(() => {
 
       </section>
 
-      <!-- Loading -->
+      <!-- =========================
+           LOADING
+           ========================= -->
+
       <p v-if="loading">
         Chargement...
       </p>
 
-      <!-- Error -->
-      <p v-if="error" class="error">
+      <!-- =========================
+           ERROR
+           ========================= -->
+
+      <p
+        v-if="error"
+        class="error"
+      >
         {{ error }}
       </p>
 
-      <!-- Restaurant list -->
+      <!-- =========================
+           RESTAURANT LIST
+           ========================= -->
+
       <section
         v-if="!loading && !error"
         class="restaurant-list"
@@ -146,32 +340,235 @@ onMounted(() => {
           class="restaurant-card"
         >
 
-          <h2>{{ restaurant.name }}</h2>
+          <!-- =========================
+               NORMAL VIEW
+               ========================= -->
 
-          <p>
-            {{ restaurant.address }}
-          </p>
+          <div
+            v-if="editingId !== restaurant.id"
+          >
 
-          <span class="cuisine">
-            🍽️ {{ restaurant.cuisine_type }}
-          </span>
+            <h2>
+              {{ restaurant.name }}
+            </h2>
 
-          <p class="coordinates">
-            📍 {{ Number(restaurant.latitude).toFixed(8) }},
-            {{ Number(restaurant.longitude).toFixed(8) }}
-          </p>
+            <p>
+              {{ restaurant.address }}
+            </p>
 
-          <p v-if="restaurant.phone_number">
-            📞 {{ restaurant.phone_number }}
-          </p>
+            <span class="cuisine">
+              🍽️ {{ restaurant.cuisine_type }}
+            </span>
+
+            <p class="coordinates">
+              📍
+              {{ Number(restaurant.latitude).toFixed(8) }},
+              {{ Number(restaurant.longitude).toFixed(8) }}
+            </p>
+
+            <p
+              v-if="restaurant.phone_number"
+            >
+              📞
+              {{ restaurant.phone_number }}
+            </p>
+
+            <!-- EDIT BUTTON -->
+
+            <button
+              class="edit-button"
+              type="button"
+              @click="startEditing(restaurant)"
+            >
+              Modifier
+            </button>
+
+          </div>
+
+          <!-- =========================
+               EDIT VIEW
+               ========================= -->
+
+          <div
+            v-else
+            class="edit-form"
+          >
+
+            <h2>
+              Modifier le restaurant
+            </h2>
+
+            <!-- NAME -->
+
+            <div class="form-group">
+
+              <label for="edit-name">
+                Nom
+              </label>
+
+              <input
+                id="edit-name"
+                v-model="editName"
+                type="text"
+              />
+
+            </div>
+
+            <!-- ADDRESS -->
+
+            <div class="form-group">
+
+              <label for="edit-address">
+                Adresse
+              </label>
+
+              <input
+                id="edit-address"
+                v-model="editAddress"
+                type="text"
+              />
+
+            </div>
+
+            <!-- COORDINATES -->
+
+            <div class="form-row">
+
+              <div class="form-group">
+
+                <label for="edit-latitude">
+                  Latitude
+                </label>
+
+                <input
+                  id="edit-latitude"
+                  v-model="editLatitude"
+                  type="number"
+                  step="any"
+                  min="-90"
+                  max="90"
+                />
+
+              </div>
+
+              <div class="form-group">
+
+                <label for="edit-longitude">
+                  Longitude
+                </label>
+
+                <input
+                  id="edit-longitude"
+                  v-model="editLongitude"
+                  type="number"
+                  step="any"
+                  min="-180"
+                  max="180"
+                />
+
+              </div>
+
+            </div>
+
+            <!-- CUISINE -->
+
+            <div class="form-group">
+
+              <label for="edit-cuisine">
+                Cuisine
+              </label>
+
+              <select
+                id="edit-cuisine"
+                v-model="editCuisine"
+              >
+
+                <option value="">
+                  Sélectionner une cuisine
+                </option>
+
+                <option
+                  v-for="cuisine in cuisines"
+                  :key="cuisine"
+                  :value="cuisine"
+                >
+                  {{ cuisine }}
+                </option>
+
+              </select>
+
+            </div>
+
+            <!-- PHONE -->
+
+            <div class="form-group">
+
+              <label for="edit-phone">
+                Téléphone
+              </label>
+
+              <input
+                id="edit-phone"
+                v-model="editPhone"
+                type="tel"
+                placeholder="+33 1 23 45 67 89"
+              />
+
+            </div>
+
+            <!-- EDIT ERROR -->
+
+            <p
+              v-if="editError"
+              class="error"
+            >
+              {{ editError }}
+            </p>
+
+            <!-- ACTIONS -->
+
+            <div class="edit-actions">
+
+              <button
+                class="save-button"
+                type="button"
+                :disabled="editLoading"
+                @click="saveRestaurant"
+              >
+                {{
+                  editLoading
+                    ? 'Enregistrement...'
+                    : 'Enregistrer'
+                }}
+              </button>
+
+              <button
+                class="cancel-button"
+                type="button"
+                :disabled="editLoading"
+                @click="cancelEditing"
+              >
+                Annuler
+              </button>
+
+            </div>
+
+          </div>
 
         </article>
 
       </section>
 
-      <!-- No results -->
+      <!-- =========================
+           NO RESULTS
+           ========================= -->
+
       <p
-        v-if="!loading && !error && restaurants.length === 0"
+        v-if="
+          !loading &&
+          !error &&
+          restaurants.length === 0
+        "
       >
         Aucun restaurant trouvé.
       </p>

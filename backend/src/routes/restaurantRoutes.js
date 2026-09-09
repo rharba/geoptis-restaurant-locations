@@ -11,9 +11,6 @@ const router = express.Router();
 // POST - Create a restaurant
 router.post('/', createRestaurant);
 
-// PUT - Update a restaurant
-router.put('/:id', updateRestaurant);
-
 // GET - Get all restaurants
 router.get('/', async (req, res) => {
   try {
@@ -89,5 +86,8 @@ router.get('/filter', async (req, res) => {
     });
   }
 });
+
+// PUT - Update a restaurant
+router.put('/:id', updateRestaurant);
 
 module.exports = router;
